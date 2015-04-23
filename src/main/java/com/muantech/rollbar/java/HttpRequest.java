@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 
 public class HttpRequest {
-
     private static final int REQUEST_TIMEOUT = 5000;
 
     private final URL url;
@@ -49,7 +48,6 @@ public class HttpRequest {
     }
 
     public boolean execute() {
-
         attemptNumber++;
 
         try {
@@ -73,7 +71,9 @@ public class HttpRequest {
                 writeBody(body, connection);
             }
 
-            if (connection.getResponseCode() != 200) return false;
+            if (connection.getResponseCode() >= 500) {
+                return false;
+            }
 
         } catch (IOException e) {
             // don't retry
@@ -91,13 +91,13 @@ public class HttpRequest {
             out = new BufferedOutputStream(connection.getOutputStream());
             out.write(this.body);
         } finally {
-            if (out != null) out.close();
+            if (out != null) {
+                out.close();
+            }
         }
-
     }
 
     public int getAttemptNumber() {
         return attemptNumber;
     }
-
 }
