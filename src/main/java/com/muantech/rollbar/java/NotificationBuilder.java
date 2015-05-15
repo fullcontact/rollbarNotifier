@@ -29,10 +29,8 @@ public class NotificationBuilder {
      * @param apiKey API Key to identify to rollbar against
      * @param environment Name of the environment notifications are being sent from
      * @param codePackageRoot Optional String to represent the root package, for example "com.fullcontact"
-     * @throws JSONException
-     * @throws UnknownHostException
      */
-    protected NotificationBuilder(String apiKey, String environment, String codePackageRoot) throws JSONException, UnknownHostException {
+    protected NotificationBuilder(String apiKey, String environment, String codePackageRoot) {
         this.accessToken = apiKey;
         this.environment = environment;
 
@@ -248,8 +246,13 @@ public class NotificationBuilder {
         return notifier;
     }
 
-    private JSONObject getServerData(String codePackageRoot) throws JSONException, UnknownHostException {
-        InetAddress localhost = InetAddress.getLocalHost();
+    private JSONObject getServerData(String codePackageRoot) {
+        InetAddress localhost;
+        try {
+            localhost = InetAddress.getLocalHost();
+        } catch (UnknownHostException e) {
+            throw new RuntimeException(e);
+        }
 
         String host = localhost.getHostName();
         String ip = localhost.getHostAddress();

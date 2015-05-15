@@ -20,7 +20,7 @@ public class NotificationBuilderTest {
 
     @Before
     public void setup() throws JSONException, UnknownHostException {
-        builder = new NotificationBuilder(TOKEN, ENVIRONMENT);
+        builder = new NotificationBuilder(TOKEN, ENVIRONMENT, null);
     }
 
     @After
