@@ -17,13 +17,65 @@ public class RollbarNotifier {
     private NotificationBuilder builder;
     private URL rollbarURL;
 
-    public RollbarNotifier(String rollbarURL, String apiKey, String env) throws MalformedURLException, JSONException, UnknownHostException {
-        this(new URL(rollbarURL), apiKey, env);
+    /**
+     * Constructs a new rollbar notifier which sends notifications out on demand to rollbar.
+     *
+     * @param rollbarURL Url to hit rollbar with (typically {@code "https://api.rollbar.com/api/1/item/"}
+     * @param apiKey API Key to notify against rollbar with
+     * @param env Name of the environment sending the notifications
+     * @throws MalformedURLException
+     * @throws JSONException
+     * @throws UnknownHostException
+     */
+    public RollbarNotifier(String rollbarURL, String apiKey, String env) throws MalformedURLException,
+                                                                                JSONException, UnknownHostException {
+        this(new URL(rollbarURL), apiKey, env, null);
     }
 
+    /**
+     * Constructs a new rollbar notifier which sends notifications out on demand to rollbar.
+     *
+     * @param rollbarURL Url to hit rollbar with (typically {@code "https://api.rollbar.com/api/1/item/"}
+     * @param apiKey API Key to notify against rollbar with
+     * @param env Name of the environment sending the notifications
+     * @throws MalformedURLException
+     * @throws JSONException
+     * @throws UnknownHostException
+     */
     public RollbarNotifier(URL rollbarURL, String apiKey, String env) throws JSONException, UnknownHostException {
+        this(rollbarURL, apiKey, env, null);
+    }
+
+    /**
+     * Constructs a new rollbar notifier which sends notifications out on demand to rollbar.
+     *
+     * @param rollbarURL Url to hit rollbar with (typically {@code "https://api.rollbar.com/api/1/item/"}
+     * @param apiKey API Key to notify against rollbar with
+     * @param env Name of the environment sending the notifications
+     * @param codePackageRoot code package root (for example {@code "com.fullcontact"}), to be used with github integration
+     * @throws MalformedURLException
+     * @throws JSONException
+     * @throws UnknownHostException
+     */
+    public RollbarNotifier(String rollbarURL, String apiKey, String env, String codePackageRoot) throws MalformedURLException,
+                                                                                                        JSONException, UnknownHostException {
+        this(new URL(rollbarURL), apiKey, env, codePackageRoot);
+    }
+
+    /**
+     * Constructs a new rollbar notifier which sends notifications out on demand to rollbar.
+     *
+     * @param rollbarURL Url to hit rollbar with (typically {@code "https://api.rollbar.com/api/1/item/"}
+     * @param apiKey API Key to notify against rollbar with
+     * @param env Name of the environment sending the notifications
+     * @param codePackageRoot code package root (for example {@code "com.fullcontact"}), to be used with github integration
+     * @throws MalformedURLException
+     * @throws JSONException
+     * @throws UnknownHostException
+     */
+    public RollbarNotifier(URL rollbarURL, String apiKey, String env, String codePackageRoot) throws JSONException, UnknownHostException {
         this.rollbarURL = rollbarURL;
-        builder = new NotificationBuilder(apiKey, env);
+        builder = new NotificationBuilder(apiKey, env, codePackageRoot);
     }
 
     public void notify(String message) {

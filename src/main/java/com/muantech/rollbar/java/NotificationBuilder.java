@@ -15,7 +15,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class NotificationBuilder {
-    private static final String NOTIFIER_VERSION = "0.1.2";
+    private static final String NOTIFIER_VERSION = "0.1.3";
 
     private final String accessToken;
     private final String environment;
@@ -23,12 +23,21 @@ public class NotificationBuilder {
     private final JSONObject notifierData;
     private final JSONObject serverData;
 
-    protected NotificationBuilder(String accessToken, String environment) throws JSONException, UnknownHostException {
-        this.accessToken = accessToken;
+    /**
+     * Constructs a new rollbar notification builder.
+     *
+     * @param apiKey API Key to identify to rollbar against
+     * @param environment Name of the environment notifications are being sent from
+     * @param codePackageRoot Optional String to represent the root package, for example "com.fullcontact"
+     * @throws JSONException
+     * @throws UnknownHostException
+     */
+    protected NotificationBuilder(String apiKey, String environment, String codePackageRoot) throws JSONException, UnknownHostException {
+        this.accessToken = apiKey;
         this.environment = environment;
 
         notifierData = getNotifierData();
-        serverData = getServerData();
+        serverData = getServerData(codePackageRoot);
     }
 
     public JSONObject build(String level, String message, Throwable throwable,
@@ -239,7 +248,7 @@ public class NotificationBuilder {
         return notifier;
     }
 
-    private JSONObject getServerData() throws JSONException, UnknownHostException {
+    private JSONObject getServerData(String codePackageRoot) throws JSONException, UnknownHostException {
         InetAddress localhost = InetAddress.getLocalHost();
 
         String host = localhost.getHostName();
@@ -248,6 +257,9 @@ public class NotificationBuilder {
         JSONObject notifier = new JSONObject();
         notifier.put("host", host);
         notifier.put("ip", ip);
+        if (codePackageRoot != null && ! codePackageRoot.isEmpty()) {
+            notifier.put("root", codePackageRoot);
+        }
         return notifier;
     }
 
