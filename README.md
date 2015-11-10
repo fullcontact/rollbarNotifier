@@ -3,8 +3,13 @@ Rollbar Java
 
 This is the notifier library for integrating Java apps with [Rollbar](https://rollbar.com/), the error aggregation service. You will need a Rollbar account: sign up for an account [here](https://rollbar.com/signup/).
 
+This differs from the main fork in that it was made simpler with less magic.  Specifically the threading has been removed so that invocations in this block during the requests (allowing threading to be handled at another later if needed).  In addition the dependency with Log4j has been removed so that this appears as a pure library.
 
-Directly
+The API has been changed, but primarily for style reasons.  For example `RollbarAttributeProvider` provides an interface so that you know exactly what can be transmitted to rollbar (extending `RollbarAttributeAdapter` and override the functions which you wish to specify values for).
+
+Feel free to file issues for feature expansions or questions around this library.
+
+Usage
 ------------------------------
 
 Example:
@@ -64,4 +69,3 @@ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 License for the specific language governing permissions and limitations under
 the License.
 </pre>
-
