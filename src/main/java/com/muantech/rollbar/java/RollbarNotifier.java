@@ -2,6 +2,7 @@ package com.muantech.rollbar.java;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.function.Consumer;
 
 import org.json.JSONObject;
 
@@ -14,6 +15,7 @@ public class RollbarNotifier {
 
     private NotificationBuilder builder;
     private URL rollbarURL;
+    private Consumer<Throwable> exceptionHandler = Throwable::printStackTrace;
 
     /**
      * Constructs a new rollbar notifier which sends notifications out on demand to rollbar.
@@ -64,6 +66,26 @@ public class RollbarNotifier {
         builder = new NotificationBuilder(apiKey, env, codePackageRoot);
     }
 
+    /**
+     * Sets the handler for unhandled exceptions that would otherwise propagate
+     * out of notify(). Note that this is not expected to be called under
+     * ordinary conditions; any invocation is either a bug in the notifier or a
+     * problem with the JVM (eg, out of memory).
+     *
+     * By default, this just calls Throwable.printStackTrace(). Beware that if
+     * you invoke your logging system in this callback, you need to ensure that
+     * there's no possibility of that recursing back into the rollbar notifier.
+     *
+     * @param exceptionHandler The new exception handler callback. May not be
+     * null.
+     */
+    public void setExceptionHandler(Consumer<Throwable> exceptionHandler) {
+        if (null == exceptionHandler)
+            throw new NullPointerException("exceptionHandler");
+
+        this.exceptionHandler = exceptionHandler;
+    }
+
     public void notify(String message) {
         notify(Level.INFO, message, null);
     }
@@ -110,6 +132,14 @@ public class RollbarNotifier {
     }
 
     private void postJson(JSONObject json) {
+        try {
+            postJsonImpl(json);
+        } catch (Throwable t) {
+            exceptionHandler.accept(t);
+        }
+    }
+
+    private void postJsonImpl(JSONObject json) {
         HttpRequest request = new HttpRequest(rollbarURL, "POST");
 
         request.setRequestProperty("Content-Type", "application/json");
@@ -122,6 +152,7 @@ public class RollbarNotifier {
                 // delay attempt to execute again
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
                 // exit without sending result
                 return;
             }
