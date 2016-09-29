@@ -6,11 +6,11 @@ import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.eclipsesource.json.JsonObject;
 
 public class NotificationBuilderTest {
     private static final String TOKEN = "tkn";
@@ -19,7 +19,7 @@ public class NotificationBuilderTest {
     private NotificationBuilder builder;
 
     @Before
-    public void setup() throws JSONException, UnknownHostException {
+    public void setup() throws UnknownHostException {
         builder = new NotificationBuilder(TOKEN, ENVIRONMENT, null);
     }
 
@@ -28,31 +28,21 @@ public class NotificationBuilderTest {
         builder = null;
     }
 
-    private void verifyMissing(JSONObject json, String key) {
-        try {
-            json.get(key);
-            fail("Data item should not be present");
-        } catch (JSONException e) {
-            // expected
-        }
-    }
-
     @Test
     public void basicBuild() {
-        JSONObject result = builder.build("INFO", null, null, null);
+        JsonObject result = builder.build("INFO", null, null, null);
 
-        assertEquals(TOKEN, result.get("access_token"));
-        JSONObject data = result.getJSONObject("data");
+        assertEquals(TOKEN, result.getString("access_token", null));
+        JsonObject data = result.get("data").asObject();
 
-        assertEquals(ENVIRONMENT, data.get("environment"));
-        assertEquals("INFO", data.get("level"));
-        assertNotNull(data.get("timestamp"));
+        assertEquals(ENVIRONMENT, data.getString("environment", null));
+        assertEquals("INFO", data.getString("level", null));
+        assertTrue(data.getLong("timestamp", -1) > 0);
         assertNotNull(data.get("server"));
         assertNotNull(data.get("notifier"));
-        verifyMissing(data, "request");
-        verifyMissing(data, "custom");
-        verifyMissing(data, "person");
-        verifyMissing(data, "client");
+        assertNull(data.getString("request", null));
+        assertNull(data.getString("person", null));
+        assertNull(data.getString("client", null));
     }
 
     @Test
@@ -68,7 +58,7 @@ public class NotificationBuilderTest {
         final String protocol = "fooProtocol";
         final String request = "fooRequest";
 
-        JSONObject result = builder.build("INFO", null, null, new RollbarAttributeAdapter() {
+        JsonObject result = builder.build("INFO", null, null, new RollbarAttributeAdapter() {
             @Override
             public String getUrl() {
                 return url;
@@ -110,18 +100,18 @@ public class NotificationBuilderTest {
             }
         });
 
-        JSONObject requestJson = result.getJSONObject("data").getJSONObject("request");
+        JsonObject requestJson = result.get("data").asObject().get("request").asObject();
 
-        assertEquals(url, requestJson.get("url"));
-        assertEquals(httpMethod, requestJson.get("method"));
+        assertEquals(url, requestJson.getString("url", null));
+        assertEquals(httpMethod, requestJson.getString("method", null));
         for (Map.Entry<String, String> header : headers.entrySet()) {
-            assertEquals(header.getValue(), requestJson.getJSONObject("headers").get(header.getKey()));
+            assertEquals(header.getValue(), requestJson.get("headers").asObject().getString(header.getKey(), null));
         }
-        assertEquals(query, requestJson.get("query_string"));
-        assertEquals(userIp, requestJson.get("user_ip"));
-        assertEquals(sessionId, requestJson.get("session"));
-        assertEquals(protocol, requestJson.get("protocol"));
-        assertEquals(request, requestJson.get("id"));
+        assertEquals(query, requestJson.getString("query_string", null));
+        assertEquals(userIp, requestJson.getString("user_ip", null));
+        assertEquals(sessionId, requestJson.getString("session", null));
+        assertEquals(protocol, requestJson.getString("protocol", null));
+        assertEquals(request, requestJson.getString("id", null));
     }
 
     @Test
@@ -131,18 +121,19 @@ public class NotificationBuilderTest {
         customData.put("fooKey1", "fooValue1");
         customData.put("fooKey2", "fooValue2");
 
-        JSONObject result = builder.build("INFO", message, null, new RollbarAttributeAdapter() {
+        JsonObject result = builder.build("INFO", message, null, new RollbarAttributeAdapter() {
             @Override
             public Map<String, String> getCustomFields() {
                 return customData;
             }
         });
 
-        JSONObject customJson = result.getJSONObject("data").getJSONObject("custom");
+        JsonObject customJson = result.get("data").asObject()
+                                      .get("custom").asObject();
 
-        assertEquals(message, customJson.get("message"));
+        assertEquals(message, customJson.getString("message", null));
         for (Map.Entry<String, String> header : customData.entrySet()) {
-            assertEquals(header.getValue(), customJson.get(header.getKey()));
+            assertEquals(header.getValue(), customJson.getString(header.getKey(), null));
         }
     }
 
@@ -152,7 +143,7 @@ public class NotificationBuilderTest {
         final String username = "fooName";
         final String userEmail = "fooEmail";
 
-        JSONObject result = builder.build("INFO", null, null, new RollbarAttributeAdapter() {
+        JsonObject result = builder.build("INFO", null, null, new RollbarAttributeAdapter() {
             @Override
             public String getUserId() {
                 return userId;
@@ -169,25 +160,27 @@ public class NotificationBuilderTest {
             }
         });
 
-        JSONObject personJson = result.getJSONObject("data").getJSONObject("person");
+        JsonObject personJson = result.get("data").asObject().get("person").asObject();
 
-        assertEquals(userId, personJson.get("id"));
-        assertEquals(username, personJson.get("username"));
-        assertEquals(userEmail, personJson.get("email"));
+        assertEquals(userId, personJson.getString("id", null));
+        assertEquals(username, personJson.getString("username", null));
+        assertEquals(userEmail, personJson.getString("email", null));
     }
 
     @Test
     public void userAgentBuild() {
         final String userAgent = "fooAgent";
 
-        JSONObject result = builder.build("INFO", null, null, new RollbarAttributeAdapter() {
+        JsonObject result = builder.build("INFO", null, null, new RollbarAttributeAdapter() {
             @Override
             public String getUserAgent() {
                 return userAgent;
             }
         });
 
-        assertEquals(userAgent, result.getJSONObject("data").getJSONObject("client")
-                                                            .getJSONObject("javascript").get("browser"));
+        assertEquals(userAgent, result.get("data").asObject()
+                                      .get("client").asObject()
+                                      .get("javascript").asObject()
+                                      .getString("browser", null));
     }
 }

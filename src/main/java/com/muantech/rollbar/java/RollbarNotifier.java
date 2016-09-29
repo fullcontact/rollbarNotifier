@@ -4,7 +4,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.function.Consumer;
 
-import org.json.JSONObject;
+import com.eclipsesource.json.JsonObject;
 
 public class RollbarNotifier {
     private static final int MAX_RETRIES = 5;
@@ -127,11 +127,11 @@ public class RollbarNotifier {
     }
 
     public void notify(Level level, String message, Throwable throwable, RollbarAttributeProvider attributeProvider) {
-        JSONObject payload = builder.build(level.toString(), message, throwable, attributeProvider);
+        JsonObject payload = builder.build(level.toString(), message, throwable, attributeProvider);
         postJson(payload);
     }
 
-    private void postJson(JSONObject json) {
+    private void postJson(JsonObject json) {
         try {
             postJsonImpl(json);
         } catch (Throwable t) {
@@ -139,7 +139,7 @@ public class RollbarNotifier {
         }
     }
 
-    private void postJsonImpl(JSONObject json) {
+    private void postJsonImpl(JsonObject json) {
         HttpRequest request = new HttpRequest(rollbarURL, "POST");
 
         request.setRequestProperty("Content-Type", "application/json");

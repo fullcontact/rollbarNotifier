@@ -2,7 +2,7 @@ apply plugin: 'java'
 apply plugin: 'maven'
 
 group = 'com.fullcontact'
-version = '0.2.0'
+version = '0.2.1'
 
 sourceCompatibility = "1.8";
 targetCompatibility = "1.8";
@@ -13,7 +13,7 @@ repositories {
 
 dependencies {
   testCompile group: 'junit', name: 'junit', version: '4.12'
-  compile 'org.json:json:20140107'
+  compile 'com.eclipsesource.minimal-json:minimal-json:0.9.4'
 }
 
 compileJava {
