@@ -10,11 +10,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.threadly.util.Clock;
+
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 
 public class NotificationBuilder {
-    private static final String NOTIFIER_VERSION = "0.1.3";
+    private static final String NOTIFIER_VERSION = "0.2.2";
+    private static final boolean USE_THREADLY_CLOCK;
+
+    static {
+        boolean useThreadlyClock;
+        try {
+            Clock.accurateTimeMillis();
+            useThreadlyClock = true;
+        } catch (NoClassDefFoundError t) {
+            // dependency is likely not available
+            useThreadlyClock = false;
+        }
+        USE_THREADLY_CLOCK = useThreadlyClock;
+    }
 
     private final String accessToken;
     private final String environment;
@@ -56,7 +71,7 @@ public class NotificationBuilder {
         data.add("platform", attributeProvider.getPlatform());
         data.add("framework", attributeProvider.getFramework());
         data.add("language", "java");
-        data.add("timestamp", System.currentTimeMillis() / 1000);
+        data.add("timestamp", (USE_THREADLY_CLOCK ? Clock.lastKnownTimeMillis() : System.currentTimeMillis()) / 1000);
 
         // message data
         data.add("body", getBody(message, throwable));
